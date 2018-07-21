@@ -1,5 +1,6 @@
 import AnalyserConfig from '../config/analyser.config';
 import AppConfig from '../config/app.config';
+import VisualizerConfig from '../config/visualizer.config';
 
 
 export default [
@@ -55,7 +56,7 @@ export default [
     {
       object: AnalyserConfig.options.multibandPeakDetection.options,
       property: "threshold",
-      min: 0, max: 6, step: 0.1
+      min: 0, max: 6, step: 0.005
     },
 
     {
@@ -76,5 +77,27 @@ export default [
       min: 0, max: 2000, step: 10
     },
   ],
+
+  [
+    "Visualizer settings",
+
+    {
+      object: VisualizerConfig,
+      property: "threshold",
+      min: 0, max: 256, step: 0.5
+    },
+
+    {
+      object: VisualizerConfig,
+      property: "glitchStrength",
+      min: 0, max: 30, step: 0.5
+    },
+
+    {
+      object: VisualizerConfig,
+      property: "treble",
+      min: 0, max: 10, step: 0.05
+    }
+  ]
 
 ];

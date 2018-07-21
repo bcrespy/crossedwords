@@ -74,7 +74,7 @@ import { AudioSource } from './audiostream/audio-source';
 import { AudioStream } from './audiostream/audio-stream';
 import { AudioAnalyser } from './audioanalysis/audio-analyser';
 
-import { AnalysedDataVisualizer } from './audioanalysis/utility/analysed-data-visualizer';
+import { WordsVisualizer } from './visualizer/words-visualizer';
 
 import { HUD } from './hud/hud-controller';
 import { Stats } from './tools/stats';
@@ -99,7 +99,7 @@ let userSelection = new UserSelection( (selectionType, info) => {
 
   // 4- we instanciate the visualizer -in this case the helper- but this is where you
   //    would instanciate your own
-  let visuHelper = new AnalysedDataVisualizer();
+  let visualizer = new WordsVisualizer();
 
   // 5- The timers 
   let startTimer = null,
@@ -131,7 +131,7 @@ let userSelection = new UserSelection( (selectionType, info) => {
     // 9- This is where you initialize your visualizer, in this case the visual helper 
     //    I recommend that you use the same conception as the visual helper: a function
     //    which returns a promise that resolves when your loader has loaded all its components
-    visuHelper.init().then( () => {
+    visualizer.init().then( () => {
       // the loading is done, we can tell the loader to GTFO
       loader.loaded();
       // we call the first analysis(), or update(), or render(), whatever you want to call it
@@ -156,7 +156,7 @@ let userSelection = new UserSelection( (selectionType, info) => {
     
     // d) we ask the helper to draw the analysed data
     //    this is where we can send the data to a proper visualizer
-    visuHelper.draw( analysedData, startTimer );
+    visualizer.draw( analysedData, startTimer );
 
     // e) end of the stats monitoring
     lastFrameTimer = currentTimer;

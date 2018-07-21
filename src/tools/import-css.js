@@ -7,3 +7,4 @@
 import '../styles/global.scss';
 import '../styles/loader.scss';
 import '../styles/user-selection.scss';
+import '../styles/canvas.scss';

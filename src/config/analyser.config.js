@@ -57,7 +57,7 @@ export default
       options: {
 
         // number of bands in which the frequencies will be split, must be a pow of 2
-        bands: 8,
+        bands: 4,
 
         // the higher the threshold is, the harder a peak has to hit compared to
         // the rest of the audio. It is advised to use a lower threshold since the values

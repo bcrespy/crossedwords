@@ -14,26 +14,66 @@ export class BinaryGrid
    * @param {number} width la largeur de la grille
    * @param {number} height la hauteur de la grille
    * @param {number} cellsize taille x et y de la cellule, en px 
+   * 
+   * @param {number} gridsize la taille de la grosse grille
+   * @param {number} spawngridsize la taille de la petite grille
    */
-  constructor( width, height, cellsize )
+  constructor( gridsize, spawngridsize, cellsize )
   {
-    this.width = width;
-    this.height = height;
+    this.gridsize = gridsize;
+    this.spawngridsize = spawngridsize;
     this.cellsize = cellsize;
-
-    this.color = "white";
-    this.colorList = [ "white", "#ADFF2F", "#E0FFFF", "#00FA9A", "#FFFF00" ];
 
     this.words = null;
     this.wordsArray = null;
 
-    this.grid = new Uint8Array(width*height).fill();
-    this.wordsGrid = new Int16Array(width*height).fill();
+    this.grid = new Uint8Array(gridsize*gridsize).fill();
+    this.wordsGrid = new Int16Array(gridsize*gridsize).fill();
 
     /**
      * @type {CanvasRenderingContext2D}
      */
     this.context = null;
+
+    this.ruleset = [1, 1, 0, 0, 0, 1, 1, 0];
+
+    this.rules = [
+      [ 1, 1, 0, 0, 0, 1, 1, 0 ],
+      [ 0, 1, 0, 1, 1, 0, 1, 0 ],
+      [ 1, 1, 0, 0, 1, 0, 1, 0 ],
+      [ 1, 0, 0, 0, 1, 1, 1, 1 ],
+      [ 1, 1, 0, 0, 0, 1, 1, 0 ],
+      [ 0, 1, 1, 0, 1, 0, 1, 0 ],
+      [ 1, 1, 1, 1, 0, 0, 0, 1 ],
+      [ 1, 0, 0, 0, 1, 1, 1, 0 ],
+      [ 1, 1, 1, 1, 0, 1, 1, 0 ],
+      [ 1, 1, 1, 1, 0, 1, 0, 0 ],
+      [ 0, 1, 1, 1, 1, 1, 0, 0 ]
+    ];
+    
+    //this.ruleset = [ 0, 1, 0, 1, 1, 0, 1, 0 ];
+    //this.ruleset = [ 1, 1, 0, 0, 1, 0, 1, 0 ];
+    //this.ruleset = [ 1, 0, 0, 0, 1, 1, 1, 1 ];
+    //this.ruleset = [ 1, 1, 0, 0, 0, 1, 1, 0 ];
+    //this.ruleset = [0, 1, 1, 0, 1, 0, 1, 0];
+    //[1, 1, 1, 1, 0, 0, 0, 1]
+    // [1, 0, 0, 0, 1, 1, 1, 0]
+    // [1, 1, 1, 1, 0, 1, 1, 0]
+    // [1, 1, 1, 1, 0, 1, 0, 0]
+    // [0, 1, 1, 1, 1, 1, 0, 0]
+
+    config.generateRuleset = () => { this.generateRuleset(); };
+  }
+
+  generateRuleset()
+  {
+    for( let i = 0; i < 8; i++ )
+    {
+      this.ruleset[i] = Math.round(Math.random());
+    }
+
+    console.log( "ruleset :" );
+    console.log( this.ruleset );
   }
 
   init()
@@ -41,8 +81,8 @@ export class BinaryGrid
     return new Promise( (resolve, reject) => {
       let canvas = document.getElementById("canvas");
       this.context = canvas.getContext("2d");
-      this.context.canvas.width = this.width * this.cellsize;
-      this.context.canvas.height = this.height * this.cellsize;
+      this.context.canvas.width = this.gridsize * this.cellsize;
+      this.context.canvas.height = this.gridsize * this.cellsize;
 
       this.context.font = this.cellsize+"px Courrier";
 
@@ -52,28 +92,31 @@ export class BinaryGrid
 
   setVal( x, y, val )
   {
-    this.grid[y*this.width+x] = val;
+    this.grid[y*this.gridsize+x] = val;
   }
 
   getVal( x, y )
   {
-    return this.grid[y*this.width+x];
+    return this.grid[y*this.gridsize+x];
   }
 
   setWordOnGrid( x, y )
   {
-    this.wordsGrid[y*this.width+x] = Math.floor(Math.random() * (this.wordsArray.length-1));
+    let randomIdx = Math.floor(Math.random() * (this.wordsArray.length-1));
+    this.wordsGrid[y*this.gridsize+x] = randomIdx;
   }
+
 
   /**
    * Déplace aléatoirement certaines cases
+   * @param {number} intensity intensité du glicth, en norme de mots (approx.)
    */
   glitch( intensity )
   {
     for( let i = 0; i < intensity; i++ )
     {
-      let rand = Math.floor( Math.random() * this.width * this.height ),
-          randDest = Math.floor( Math.random() * this.width * this.height );
+      let rand = Math.floor( Math.random() * this.gridsize * this.gridsize ),
+          randDest = Math.floor( Math.random() * this.gridsize * this.gridsize );
       
       let tempValues = {
         val: this.grid[rand],
@@ -88,57 +131,109 @@ export class BinaryGrid
     }
   }
 
+
   /**
-   * Décalle les colonnes
+   * Décalle les informations dans les tableaux de 1 vers la droite
    */
   shift()
   {
-    for( let x = this.width-1; x > 0; x-- )
+    for( let x = this.gridsize-1; x > 0; x-- )
     {
-      for( let y = 0; y < this.height; y++ )
+      // on triche un peu 
+      this.setWordOnGrid(0,x);
+
+      for( let y = 0; y < this.gridsize; y++ )
       {
-        this.setVal(x,y, this.getVal(x-1,y));
-        this.wordsGrid[y*this.width+x] = this.wordsGrid[y*this.width+x-1];
+        if( x < config.automateStart )
+        {
+          this.setVal(x,y, this.getVal(x-1,y));
+        }
+        else 
+        {
+          // on récupère les valeurs d'intérêt de l'automate
+          let topIdx = (x-1) + (y-1) * this.gridsize,
+              topVal = y == 0 ? 0 : this.grid[topIdx],
+              midVal = this.grid[topIdx+this.gridsize],
+              bottomVal = y == this.gridsize-1 ? 0 : this.grid[topIdx+this.gridsize*2];
+
+          let val = this.automate( topVal, midVal, bottomVal );
+          this.setVal(x, y, val);
+        }
+        
+        this.wordsGrid[y*this.gridsize+x] = this.wordsGrid[y*this.gridsize+x-1];
       }
     }
   }
 
+
   /**
-   *  
+   * Retourne, pour un set de 3 valeurs, une valeur de retour 
+   */
+  automate( a, b, c )
+  {
+    if( a && b && c ) return this.ruleset[0];
+    else if( a && b && !c ) return this.ruleset[1];
+    else if( a && !b && c ) return this.ruleset[2];
+    else if( a && !b && !c ) return this.ruleset[3];
+    else if( !a && b && c ) return this.ruleset[4];
+    else if( !a && b && !c ) return this.ruleset[5];
+    else if( !a && !b && c ) return this.ruleset[6];
+    else if( !a && !b && !c ) return this.ruleset[7];
+
+    return 0;
+  }
+
+
+  /**
+   * 
    * @param {AudioAnalysedDataForVisualization} audioData 
    */
   draw( audioData )
   {
-    /*if( audioData.peak.value == 1 )
-    {
-      this.color = this.colorList[Math.floor(Math.random() * (this.colorList.length-1))];
-      document.body.style.backgroundColor = this.color;
-    }*/
+    this.context.fillStyle = "#3b1af3";
+    this.context.fillRect(0,0,this.gridsize*this.cellsize,this.gridsize*this.cellsize);
 
-    this.context.fillStyle = "white";//this.color;
-    this.context.fillRect(0,0,900,900);
-
-    this.context.fillStyle = "black";
+    this.context.fillStyle = "#2bffdb";
 
     let trebleStrength = config.treble * audioData.peak.value * 0.05 * audioData.energy;
 
-    for( let x = 0; x < this.width; x++ )
+    for( let x = 0; x < this.gridsize; x++ )
     {
-      for( let y = 0; y < this.height; y++ )
+      for( let y = 0; y < this.gridsize; y++ )
       {
-        //this.context.fillStyle = this.getVal(x,y) ? "black" : "white";
-        //this.context.fillRect( x*this.cellsize, y*this.cellsize, this.cellsize, this.cellsize );
-        if( this.getVal(x,y) ) 
-          this.context.fillText( this.wordsArray[this.wordsGrid[y*this.width+x]], x*this.cellsize + (Math.random()-0.5) * trebleStrength, y*this.cellsize + (Math.random()-0.5) * trebleStrength );
+        if( this.getVal(x,y) ) {
+          this.context.fillText( this.wordsArray[this.wordsGrid[y*this.gridsize+x]], x*this.cellsize + (Math.random()-0.5) * trebleStrength, y*this.cellsize + (Math.random()-0.5) * trebleStrength );
+          //this.context.fillRect( x*this.cellsize, y*this.cellsize, this.cellsize, this.cellsize );
+        }
       }
     }
   }
 
-  getRandomWord()
+
+  /**
+   * Sélection un ruleset parmi la liste des ruleset
+   */
+  setRulesetFromList()
   {
-    return this.wordsArray[Math.floor(Math.random() * (this.wordsArray.length-1))];
+    this.ruleset = this.rules[Math.floor(Math.random()*this.rules.length)];
   }
 
+
+  /**
+   * Retourne un mot aléatoire dans le tableau des mots crée depuis 
+   * le fichier chargé 
+   */
+  /*getRandomWord()
+  {
+    return this.wordsArray[Math.floor(Math.random() * (this.wordsArray.length-1))];
+  }*/
+
+
+  /**
+   * Charge un fichier puis retourne son contenu sous la forme d'une chaine 
+   * de caractères
+   * @param {string} filename chemin du fichier à charger 
+   */
   loadFile( filename )
   {
     return new Promise( (resolve, reject) => {
@@ -151,6 +246,7 @@ export class BinaryGrid
         {
           this.words = xhr.responseText;
           this.wordsArray = this.words.split(' ');
+          this.wordsArray[0] = "CHAOS";
           resolve();
         }
       }

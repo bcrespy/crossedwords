@@ -7,7 +7,11 @@ export class WordsVisualizer
 {
   constructor()
   {
-    this.grid = new BinaryGrid(48, 48, 8);
+    this.smallgridsize = 41;
+    this.gridsize = 71;
+    this.cellsize = 6;
+
+    this.grid = new BinaryGrid( this.gridsize, this.smallgridsize, this.cellsize );
     this.frames = 0;
   }
 
@@ -24,8 +28,9 @@ export class WordsVisualizer
    */
   draw( audioData )
   {
-    let h = 64;
+    let h = this.smallgridsize;
     let d = audioData.bufferSize / h;
+    let yOffset = (this.gridsize-this.smallgridsize)/2;
 
     if( this.frames%2 == 0 )
     {
@@ -34,10 +39,22 @@ export class WordsVisualizer
       for( let i = 0; i < h; i++ )
       {
         let fVal = audioData.frequenciesData[Math.floor(i * d)];
-        this.grid.setVal(0, (h-1)-i, fVal > config.threshold ? 1 : 0);
-        this.grid.setWordOnGrid(0,i);
+        this.grid.setVal(0, (this.gridsize-1)-(i+yOffset), fVal > config.threshold ? 1 : 0);
       }
     }
+    else 
+    {
+      for( let i = 0; i < this.gridsize; i++ )
+      {
+        if( i == yOffset )
+          i = yOffset + h;
+        
+        this.grid.setVal( 0, i, 0 );
+      }
+    }
+
+    if( this.frames%config.framesBeforeChange == 0 )
+      this.grid.setRulesetFromList();
 
     this.frames++;
 

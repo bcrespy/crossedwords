@@ -56,6 +56,11 @@ export class GUI extends HUDElement
         this.parseControls( this.controllers[control[0]], copy );
       }
 
+      else if( typeof control.object[control.property] === "function" )
+      {
+        this.controllers[control.property] = gui.add( control.object, control.property );
+      }
+
       else if( control.type === "color" ) // it's a color
       {
         this.controllers[control.property] = gui.addColor( control.object, control.property );

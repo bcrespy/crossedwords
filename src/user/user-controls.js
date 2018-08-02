@@ -97,6 +97,23 @@ export default [
       object: VisualizerConfig,
       property: "treble",
       min: 0, max: 10, step: 0.05
+    },
+
+    {
+      object: VisualizerConfig,
+      property: "automateStart",
+      min: 0, max: 250, step: 1
+    },
+
+    {
+      object: VisualizerConfig,
+      property: "framesBeforeChange",
+      min: 0, max: 2000, step: 50
+    },
+
+    {
+      object: VisualizerConfig, 
+      property: "generateRuleset"
     }
   ]
 
